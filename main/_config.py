@@ -10,8 +10,11 @@ class Config(BaseSettings):
     ENVIRONMENT: str
     LOGGING_LEVEL: int = logging.INFO
 
+    # API Key for authentication
+    API_KEY: str
+
     # Coda API configuration
-    CODA_API_TOKEN: str | None
+    CODA_API_TOKEN: str
 
     # Merge table configuration
     MERGE_TABLE_CONFIG: MergeTableConfig
