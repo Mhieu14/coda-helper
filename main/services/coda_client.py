@@ -46,6 +46,7 @@ class CodaClient:
         data: dict[str, Any] | None = None,
         retry_count: int = 3,
         retry_delay: int = 1,
+        timeout: int = 300,  # 5 minutes in seconds
     ) -> dict[str, Any]:
         """Make an async request to the Coda API with retry logic for rate limits"""
         url = f"{self.BASE_URL}{endpoint}"
@@ -59,6 +60,7 @@ class CodaClient:
                     headers=self.headers,
                     params=params,
                     json=data,
+                    timeout=timeout,  # Add timeout parameter
                 )
 
             # Log response status for debugging
@@ -131,6 +133,8 @@ class CodaClient:
         all_rows = []
         next_page_token = None
 
+        loop_limit = 100
+        loop_count = 0
         while True:
             params = {
                 "limit": 100,
@@ -149,6 +153,10 @@ class CodaClient:
 
             next_page_token = response.get("nextPageToken")
             if not next_page_token:
+                break
+
+            loop_count += 1
+            if loop_count > loop_limit:
                 break
 
         return all_rows
