@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ._config import config
-from .middlewares import AccessLogMiddleware, DBSessionMiddleware
+from .middlewares import AccessLogMiddleware
 
 
 api_docs_enabled = config.ENVIRONMENT == "local"
@@ -20,5 +20,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(DBSessionMiddleware)
 app.add_middleware(AccessLogMiddleware)

@@ -3,7 +3,6 @@
 ## Requirements
 
 - Python 3.10+
-- MySQL 5.7+
 - [Poetry](https://python-poetry.org/)
 
 ## Installation
@@ -27,28 +26,6 @@ source ./venv/bin/activate
 
 ```shell
 poetry install
-```
-
-### Setup database
-
-Create a database
-
-```shell
-mysql -u root -p
-mysql> CREATE DATABASE fastapi_template_development;
-mysql> exit
-```
-
-In `.env` file (create one if it doesn't exist), add database uri
-
-```
-SQLALCHEMY_DATABASE_URI=mysql+aiomysql://root:123456@127.0.0.1/fastapi_template_development
-```
-
-Then upgrade database
-
-```shell
-alembic upgrade head
 ```
 
 ### Install `pre-commit` hooks
