@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 from typing import Any
 
 from main.libs.log import get_logger
@@ -133,9 +134,12 @@ class TableMerger:
         mapped_values = {}
 
         def normalize_column_name(name: str) -> str:
-            return (
-                name.lower().replace("/", "").replace("(", "").replace(")", "").strip()
-            )
+            # Remove special characters and normalize spaces
+            return re.sub(
+                r"\s+",
+                " ",
+                name.lower().replace("/", "").replace("(", "").replace(")", ""),
+            ).strip()
 
         for col_name, value in row_values.items():
             # Case 1: If there's an explicit mapping, use it
