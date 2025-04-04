@@ -28,6 +28,8 @@ class TableMerger:
         self.source_tables = [
             (src.doc_id, src.table_id, src.project) for src in source_tables
         ]
+        # Initialize column mappings (source column name -> destination column name)
+        self.column_mappings: dict[str, str] = {}
 
     async def verify_api_access(self) -> bool:
         """Verify API token and document access"""
@@ -118,6 +120,50 @@ class TableMerger:
         # Convert the row values to a string and hash it
         row_str = json.dumps(row_values, sort_keys=True)
         return hashlib.md5(row_str.encode()).hexdigest()  # noqa: S324
+
+    def map_column_names(
+        self,
+        row_values: dict[str, Any],
+        destination_columns: set[str],
+    ) -> dict[str, Any]:
+        """
+        Map source column names to destination column names using both explicit mappings
+        and automatic fuzzy matching based on case and special characters.
+        """
+        mapped_values = {}
+
+        def normalize_column_name(name: str) -> str:
+            return (
+                name.lower().replace("/", "").replace("(", "").replace(")", "").strip()
+            )
+
+        for col_name, value in row_values.items():
+            # Case 1: If there's an explicit mapping, use it
+            if col_name in self.column_mappings:
+                mapped_values[self.column_mappings[col_name]] = value
+                continue
+
+            # Case 2: If the column name already exists in destination, use as is
+            if col_name in destination_columns:
+                mapped_values[col_name] = value
+                continue
+
+            # Case 3: Try to find a match by normalizing names
+            normalized_source = normalize_column_name(col_name)
+            found_match = False
+
+            for dest_col in destination_columns:
+                normalized_dest = normalize_column_name(dest_col)
+                if normalized_source == normalized_dest:
+                    mapped_values[dest_col] = value
+                    found_match = True
+                    break
+
+            # Case 4: If no match found, keep the original name
+            if not found_match:
+                mapped_values[col_name] = value
+
+        return mapped_values
 
     @staticmethod
     def add_source_info_to_rows(
@@ -217,6 +263,13 @@ class TableMerger:
 
             # Use the project name from config or default
             project = project_name or f"Project {i}"
+
+            # Apply column name mapping before adding source info
+            for row in rows:
+                row["values"] = self.map_column_names(
+                    row["values"],
+                    destination_column_names,
+                )
 
             processed_rows = self.add_source_info_to_rows(rows, source_id, project)
 
